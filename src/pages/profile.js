@@ -1,68 +1,75 @@
-import React, { useState } from 'react';
-
-// Assuming you have a component for EmployeeCard
-const EmployeeCard = ({ empid, name, position, dob }) => {
-  return (
-    <div className="bg-white shadow-md rounded-md p-4 mb-4">
-      <p><strong>Employee ID:</strong> {empid}</p>
-      <p><strong>Name:</strong> {name}</p>
-      <p><strong>Position:</strong> {position}</p>
-      <p><strong>Date of Birth:</strong> {dob}</p>
-    </div>
-  );
-};
+import React, { useEffect, useState } from 'react';
+import componylogo from '../assets/images/clogo.png';
+import axios from 'axios';
+import EmployeeCard from '../components/employeecard';
 
 const SearchPage = () => {
-  // Sample employee data
   const [employees] = useState([
     { empid: 1, name: 'John Doe', position: 'Software Engineer', dob: '1990-01-01' },
     { empid: 2, name: 'Jane Smith', position: 'Product Manager', dob: '1985-05-15' },
     // Add more employees as needed
   ]);
 
-  // State for search query
   const [searchQuery, setSearchQuery] = useState('');
+  const [authenticated, setAuthenticated] = useState(false); // State to track authentication
 
-  // Function to handle search query change
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  // Filter employees based on search query
+  const authenticate = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/authenticate', {
+        username: 'username', // Replace with actual username
+        password: 'password' // Replace with actual password
+      });
+      const { authenticated } = response.data;
+      setAuthenticated(authenticated);
+    } catch (error) {
+      console.error('Error authenticating:', error);
+    }
+  };
+
+  // Function to call authenticate when component mounts
+  useEffect(() => {
+    authenticate();
+  }, []);
+
   const filteredEmployees = employees.filter((employee) =>
     employee.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="container mx-auto py-8">
-      {/* Company logo */}
-      <div className="mb-4">
-        <img src="/path/to/company-logo.png" alt="Company Logo" className="w-24 h-24" />
+    <div className="w-screen h-screen bg-gradient-to-b from-[#000000] to-[#000E09] flex flex-col items-center justify-center">
+      <div className="">
+        <img src={componylogo} alt="Company Logo" className="w-24 h-24" />
       </div>
       
-      {/* Search bar */}
-      <div className="mb-4">
+      <div className='m-6'>
         <input
           type="text"
-          placeholder="Search employees by name"
+          placeholder="Search with name"
           value={searchQuery}
           onChange={handleSearchInputChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md"
+          className="w-full px-8 py-2 text-base text-white bg-[#131816] rounded-[50px]"
         />
       </div>
 
-      {/* Employee cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredEmployees.map((employee) => (
-          <EmployeeCard
-            key={employee.empid}
-            empid={employee.empid}
-            name={employee.name}
-            position={employee.position}
-            dob={employee.dob}
-          />
-        ))}
-      </div>
+      {authenticated ? (
+        <div className="">
+          {filteredEmployees.map((employee) => (
+            <EmployeeCard
+              key={employee.empid}
+              empid={employee.empid}
+              name={employee.name}
+              position={employee.position}
+              dob={employee.dob}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-white">Please wait... Authenticating</p>
+      )}
     </div>
   );
 };
